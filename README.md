@@ -1,5 +1,5 @@
 # object_detection
-This package used YOLO8 and realsense d435i camera to detect objects and find there 3D coordinates.
+This package used YOLO8 and realsense d435i camera to detect objects and find there 3D coordinates publishes list of objects and their corresponding coordinate on topic /detected_objects.
 
 ## Usage
 ```bash
