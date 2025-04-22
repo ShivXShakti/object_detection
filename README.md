@@ -9,4 +9,5 @@ ros2 launch realsense2_camera rs_launch.py camera_namespace:=robot1 camera_name:
 ros2 run object_detection detection_service
 ```
 ```bash
-ros2 run object_detection detection_client```
+ros2 run object_detection detection_client
+```
