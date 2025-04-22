@@ -13,8 +13,6 @@ class ObjectDetectionServer(Node):
     def __init__(self):
         super().__init__('object_detection_server')
         self.srv = self.create_service(ObjectDetection, 'detect_object', self.depth_2_cartisian)
-        self.get_logger().info('Object Detection Service Ready')
-
         self.subscription = self.create_subscription(
             Image,
             '/robot1/D435_1/color/image_raw',
@@ -25,10 +23,9 @@ class ObjectDetectionServer(Node):
 
         self.bridge = CvBridge()
         self.model = YOLO("yolov8n.pt")
-        self.get_logger().info("YOLO Realsense Node Initialized")
+        self.get_logger().info('Object Detection Service YOLO Ready')
         self.depth_image = None
         self.color_image = None
-
     
     def camera_info_callback(self, msg):
         """Extract intrinsic camera parameters"""
@@ -37,9 +34,7 @@ class ObjectDetectionServer(Node):
         """Convert depth image from ROS2 message to OpenCV format"""
         self.depth_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='16UC1')
     def image_callback(self, msg):
-        #self.get_logger().info("Received image from camera")
         self.color_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
-        
         
     def depth_2_cartisian(self, request, response):
         """Service callback to detect multiple objects"""
@@ -49,8 +44,6 @@ class ObjectDetectionServer(Node):
             self.get_logger().warn("No image received yet.")
             return response
         results = self.model(color_img)
-        #detected_objs = []
-        #labels = []
         detected_objects = []
         for result in results:
             for obj in result.boxes.data:
@@ -64,7 +57,7 @@ class ObjectDetectionServer(Node):
                 cx, cy = int((x1 + x2) / 2), int((y1 + y2) / 2)
 
                 Z = depth_img[cy, cx] * 0.001  # Depth in mm
-                if Z == 0:  # Ignore invalid depth points
+                if Z == 0:
                     self.get_logger().warn("Invalid depth at selected point!")
                     return
 
@@ -78,24 +71,17 @@ class ObjectDetectionServer(Node):
                         [0,0,0,1]])
                 poc = np.array([X, Y, Z, 1]).reshape(4,1)
                 p = TWC@poc
-                #labels.append(class_name)
-                #detected_objs.append(p.flatten())
                 p = p.flatten()
                 obj = Object()
                 obj.label = class_name
                 obj.x = p[0]
                 obj.y = p[1]
                 obj.z = p[2]
-                print(f"wold cordinate: {p.flatten(), p[0]}")
-                self.get_logger().info(f'Published coordinates: x={X}, y={Y}, z={Z}')
 
                 detected_objects.append(obj)
-                #cv2.imshow("YOLO Detection", color_img)
-                #cv2.imshow("Depth window", depth_colormap)
-                #cv2.waitKey(1)
         response.objects = detected_objects
         response.success = True if detected_objects else False
-        self.get_logger().info(f"Detected {len(detected_objects)} objects.")
+        self.get_logger().info(f"Detected {len(detected_objects)} objects. {response.objects} ")
         return response
                 
 

@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
-from custom_interface.srv import ObjectDetection  # Your custom service
+from custom_interface.srv import ObjectDetection
+from custom_interface.msg import ObjectArray
 
 class ObjectDetectionClient(Node):
     def __init__(self):
@@ -11,6 +12,7 @@ class ObjectDetectionClient(Node):
             self.get_logger().info('Service not available, waiting...')
 
         self.req = ObjectDetection.Request()
+        self.publisher_ = self.create_publisher(ObjectArray, '/detected_objects', 10)
 
     def send_request(self):
         future = self.cli.call_async(self.req)
@@ -19,9 +21,10 @@ class ObjectDetectionClient(Node):
         if future.result() is not None:
             response = future.result()
             if response.success:
-                self.get_logger().info(f"Detected {len(response.objects)} objects:")
-                for obj in response.objects:
-                    self.get_logger().info(f"Label: {obj.label}, x: {obj.x}, y: {obj.y}, z: {obj.z}")
+                object_array_msg = ObjectArray()
+                object_array_msg.objects = response.objects
+                self.publisher_.publish(object_array_msg)
+                self.get_logger().info(f"Detected Objects: {response.objects}")
             else:
                 self.get_logger().info("Detection failed or no objects found.")
         else:

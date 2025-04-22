@@ -20,10 +20,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'vlm_planner = ur_ai.vlm_planner:main',
-            'object_detection = ur_ai.object_detection:main',
-            'detection_service = ur_ai.detection_service:main',
-            'detection_client = ur_ai.detection_client:main',
+            'detection_service = object_detection.detection_service:main',
+            'detection_client = object_detection.detection_client:main',
         ],
     },
 )
